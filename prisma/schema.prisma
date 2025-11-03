@@ -34,11 +34,11 @@ model Account {
     provider                 String
     providerAccountId        String
     refresh_token            String? @db.Text
-    access_token             String? // @db.Text
+    access_token             String?
     expires_at               Int?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String?
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     refresh_token_expires_in Int?
@@ -63,6 +63,8 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    tokens        Int       @default(0)
+    receipts      Receipt[] // link receipts to user
 }
 
 model VerificationToken {
@@ -71,4 +73,30 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// Payment providers used for receipts
+enum PaymentProvider {
+    telebirr
+    cbe
+    abyssinia
+}
+
+model Receipt {
+    id             Int             @id @default(autoincrement())
+    provider       PaymentProvider
+    payerName      String?
+    receiverName   String?
+    amount         Int
+    reference      String
+    status         String?
+    data           Json
+    user           User            @relation(fields: [userId], references: [id])
+    userId         String
+    packageId      Int
+    creditedTokens Int
+    createdAt      DateTime        @default(now())
+    verifiedAt     DateTime        @default(now())
+
+    @@unique([provider, reference], name: "provider_reference")
 }

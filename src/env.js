@@ -17,6 +17,10 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    VERIFIER_API_KEY: z.string(),
+    PLATFORM_OWNER_FULLNAME: z.string(),
+    CBE_ACCOUNT_SUFFIX: z.string().regex(/^\d{8}$/),
+    ABYSSINIA_ACCOUNT_SUFFIX: z.string().regex(/^\d{5}$/),
   },
 
   /**
@@ -26,6 +30,9 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_TELEBIRR_NUMBER: z.string(),
+    NEXT_PUBLIC_CBE_ACCOUNT_NUMBER: z.string(),
+    NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER: z.string(),
   },
 
   /**
@@ -38,6 +45,13 @@ export const env = createEnv({
     AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+    VERIFIER_API_KEY: process.env.VERIFIER_API_KEY,
+    PLATFORM_OWNER_FULLNAME: process.env.PLATFORM_OWNER_FULLNAME,
+    CBE_ACCOUNT_SUFFIX: process.env.CBE_ACCOUNT_SUFFIX,
+    ABYSSINIA_ACCOUNT_SUFFIX: process.env.ABYSSINIA_ACCOUNT_SUFFIX,
+    NEXT_PUBLIC_TELEBIRR_NUMBER: process.env.NEXT_PUBLIC_TELEBIRR_NUMBER,
+    NEXT_PUBLIC_CBE_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_CBE_ACCOUNT_NUMBER,
+    NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
