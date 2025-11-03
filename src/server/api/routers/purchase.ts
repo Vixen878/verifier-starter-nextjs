@@ -36,34 +36,29 @@ export const purchaseRouter = createTRPCRouter({
                 throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid package" })
             }
 
-            // 1) Graceful duplicate check (provider + reference)
+            // Duplicate guard
             const providerEnum = input.provider as PaymentProvider
             const existing = await ctx.db.receipt.findUnique({
                 where: { provider_reference: { provider: providerEnum, reference: input.reference } },
             })
             if (existing) {
-                throw new TRPCError({
-                    code: "CONFLICT",
-                    message: "This reference number has already been used.",
-                })
+                throw new TRPCError({ code: "CONFLICT", message: "This reference number has already been used." })
             }
 
-            // 2) Verify with typed branches; extract only needed fields
             let amount: number
             let receiverName: string
+            let payerName: string
             let status: string | undefined
-            let receiptData: Prisma.JsonObject
+            let receiptData: Prisma.InputJsonObject
 
             if (input.provider === "telebirr") {
                 const result = await client.verifyTelebirr({ reference: input.reference })
                 if (!result.ok) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: result.error ?? "Verification failed",
-                    })
+                    throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                payerName = result.data.payerName ?? ""
                 status = result.data.status ?? result.data.statusText
                 receiptData = {
                     reference: result.data.reference,
@@ -86,13 +81,12 @@ export const purchaseRouter = createTRPCRouter({
                     accountSuffix: process.env.CBE_ACCOUNT_SUFFIX ?? "",
                 })
                 if (!result.ok) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: result.error ?? "Verification failed",
-                    })
+                    throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                payerName = result.data.payerName ?? ""
+                status = undefined
                 receiptData = {
                     reference: result.data.reference,
                     amount: result.data.amount,
@@ -110,13 +104,12 @@ export const purchaseRouter = createTRPCRouter({
                     suffix: process.env.ABYSSINIA_ACCOUNT_SUFFIX ?? "",
                 })
                 if (!result.ok) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: result.error ?? "Verification failed",
-                    })
+                    throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                payerName = result.data.payerName ?? ""
+                status = undefined
                 receiptData = {
                     reference: result.data.reference,
                     amount: result.data.amount,
@@ -129,7 +122,6 @@ export const purchaseRouter = createTRPCRouter({
                 }
             }
 
-            // 3) Validate amount and receiver name
             if (amount !== pkg.price) {
                 throw new TRPCError({
                     code: "BAD_REQUEST",
@@ -144,7 +136,6 @@ export const purchaseRouter = createTRPCRouter({
                 })
             }
 
-            // 4) Atomically create receipt and credit tokens
             try {
                 const [, updated] = await ctx.db.$transaction([
                     ctx.db.receipt.create({
@@ -153,6 +144,7 @@ export const purchaseRouter = createTRPCRouter({
                             reference: input.reference,
                             amount,
                             receiverName,
+                            payerName, // <— store payer name
                             status,
                             data: receiptData,
                             userId: ctx.session.user.id,
@@ -175,12 +167,9 @@ export const purchaseRouter = createTRPCRouter({
                     reference: input.reference,
                 }
             } catch (e: unknown) {
-                // Handle race condition: unique constraint violation
+                // Handle unique constraint race
                 if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-                    throw new TRPCError({
-                        code: "CONFLICT",
-                        message: "This reference number has already been used.",
-                    })
+                    throw new TRPCError({ code: "CONFLICT", message: "This reference number has already been used." })
                 }
                 throw e
             }
