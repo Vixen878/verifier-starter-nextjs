@@ -26,6 +26,14 @@ type PaymentModalProps = Readonly<{
   onClose: () => void
   package: Package
   onPaymentSuccess: (tokens: number) => void
+  config?: Readonly<{
+    platformOwnerFullName?: string
+    cbeAccountSuffix?: string
+    abyssiniaAccountSuffix?: string
+    telebirrNumber?: string
+    cbeAccountNumber?: string
+    abyssiniaAccountNumber?: string
+  }>
 }>
 
 export default function PaymentModal({
@@ -33,7 +41,21 @@ export default function PaymentModal({
   onClose,
   package: pkg,
   onPaymentSuccess,
-}: PaymentModalProps): JSX.Element {
+  config,
+}: Readonly<{
+  isOpen: boolean
+  onClose: () => void
+  package: Package
+  onPaymentSuccess: (tokens: number) => void
+  config?: Readonly<{
+    platformOwnerFullName?: string
+    cbeAccountSuffix?: string
+    abyssiniaAccountSuffix?: string
+    telebirrNumber?: string
+    cbeAccountNumber?: string
+    abyssiniaAccountNumber?: string
+  }>
+}>): JSX.Element {
   const [step, setStep] = useState<"provider" | "receipt">("provider")
   const [selectedProvider, setSelectedProvider] = useState<ProviderId | null>(null)
   const [isVerifying, setIsVerifying] = useState<boolean>(false)
@@ -51,6 +73,7 @@ export default function PaymentModal({
   }, [isOpen])
 
   const handleProviderSelect = (provider: ProviderId) => {
+    console.log("[PaymentModal] Provider selected", { provider })
     setSelectedProvider(provider)
     setError(null)
   }
@@ -58,6 +81,20 @@ export default function PaymentModal({
   const handleProceedToReceipt = () => {
     if (!selectedProvider) {
       setError("Please select a payment provider")
+      return
+    }
+    console.log("[PaymentModal] Proceed to receipt", { provider: selectedProvider, config })
+    // Require minimal config before proceeding
+    if (!config?.platformOwnerFullName) {
+      setError("Please configure your Platform Owner Full Name on the pricing page.")
+      return
+    }
+    if (selectedProvider === "cbe" && !config?.cbeAccountSuffix) {
+      setError("Please configure your CBE account suffix (8 digits) on the pricing page.")
+      return
+    }
+    if (selectedProvider === "abyssinia" && !config?.abyssiniaAccountSuffix) {
+      setError("Please configure your Abyssinia account suffix (5 digits) on the pricing page.")
       return
     }
     setStep("receipt")
@@ -68,11 +105,22 @@ export default function PaymentModal({
     setError(null)
     try {
       if (!selectedProvider) throw new Error("No provider selected")
-      await verifyMutation.mutateAsync({
+      console.log("[PaymentModal] Verify request", {
         provider: selectedProvider,
         reference: receiptNumber,
         packageId: pkg.id,
       })
+      await verifyMutation.mutateAsync({
+        provider: selectedProvider,
+        reference: receiptNumber,
+        packageId: pkg.id,
+        config: {
+          platformOwnerFullName: config?.platformOwnerFullName,
+          cbeAccountSuffix: config?.cbeAccountSuffix,
+          abyssiniaAccountSuffix: config?.abyssiniaAccountSuffix,
+        },
+      })
+      console.log("[PaymentModal] Verify success", { tokens: pkg.tokens })
       onPaymentSuccess(pkg.tokens)
     } catch (err: unknown) {
       const getErrorMessage = (e: unknown): string => {
@@ -208,6 +256,11 @@ export default function PaymentModal({
                   onVerify={handleVerifyReceipt}
                   isVerifying={isVerifying}
                   onGoBack={handleGoBack}
+                  hints={{
+                    telebirr: config?.telebirrNumber,
+                    cbe: config?.cbeAccountNumber,
+                    abyssinia: config?.abyssiniaAccountNumber,
+                  }}
                 />
               </motion.div>
             )}

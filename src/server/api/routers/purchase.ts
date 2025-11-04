@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // Module: purchaseRouter (verifyAndCredit mutation)
@@ -28,13 +29,29 @@ export const purchaseRouter = createTRPCRouter({
                 provider: z.enum(["telebirr", "cbe", "abyssinia"]),
                 reference: z.string().min(5),
                 packageId: z.number().int().positive(),
+                // allow hosted demo overrides (optional)
+                config: z
+                    .object({
+                        platformOwnerFullName: z.string().min(1).optional(),
+                        cbeAccountSuffix: z.string().regex(/^\d{8}$/).optional(),
+                        abyssiniaAccountSuffix: z.string().regex(/^\d{5}$/).optional(),
+                    })
+                    .optional(),
             }),
         )
         .mutation(async ({ ctx, input }) => {
             const pkg = PACKAGES[input.packageId as 1 | 2 | 3]
             if (!pkg) {
+                console.warn("[purchase.verifyAndCredit] Invalid package", { packageId: input.packageId })
                 throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid package" })
             }
+
+            console.log("[purchase.verifyAndCredit] Start", {
+                userId: ctx.session.user.id,
+                provider: input.provider,
+                reference: input.reference,
+                packageId: input.packageId,
+            })
 
             // Duplicate guard
             const providerEnum = input.provider as PaymentProvider
@@ -42,24 +59,63 @@ export const purchaseRouter = createTRPCRouter({
                 where: { provider_reference: { provider: providerEnum, reference: input.reference } },
             })
             if (existing) {
+                console.warn("[purchase.verifyAndCredit] Duplicate reference detected", {
+                    provider: input.provider,
+                    reference: input.reference,
+                })
                 throw new TRPCError({ code: "CONFLICT", message: "This reference number has already been used." })
             }
+
+            const uc = await ctx.db.userConfig.findUnique({ where: { userId: ctx.session.user.id } })
+
+            const expectedOwner = normalizeName(
+                input.config?.platformOwnerFullName ??
+                    uc?.platformOwnerFullName ??
+                    process.env.PLATFORM_OWNER_FULLNAME ??
+                    "",
+            )
+            const cbeSuffix =
+                input.config?.cbeAccountSuffix ?? uc?.cbeAccountSuffix ?? process.env.CBE_ACCOUNT_SUFFIX ?? ""
+            const abyssiniaSuffix =
+                input.config?.abyssiniaAccountSuffix ??
+                uc?.abyssiniaAccountSuffix ??
+                process.env.ABYSSINIA_ACCOUNT_SUFFIX ??
+                ""
+
+            console.log("[purchase.verifyAndCredit] Resolved config", {
+                expectedOwner,
+                cbeSuffix,
+                abyssiniaSuffix,
+                telebirrNumber: uc?.telebirrNumber,
+                cbeAccountNumber: uc?.cbeAccountNumber,
+            })
 
             let amount: number
             let receiverName: string
             let payerName: string
             let status: string | undefined
             let receiptData: Prisma.InputJsonObject
+            let receiverAccount: string | undefined
 
             if (input.provider === "telebirr") {
+                console.log("[purchase.verifyAndCredit] Telebirr verify request", { reference: input.reference })
                 const result = await client.verifyTelebirr({ reference: input.reference })
                 if (!result.ok) {
+                    console.error("[purchase.verifyAndCredit] Telebirr verify failed", { error: result.error })
                     throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                receiverAccount = result.data.receiverAccount
                 payerName = result.data.payerName ?? ""
                 status = result.data.status ?? result.data.statusText
+                console.log("[purchase.verifyAndCredit] Telebirr response parsed", {
+                    amount,
+                    receiverName,
+                    receiverAccount,
+                    payerName,
+                    status,
+                })
                 receiptData = {
                     reference: result.data.reference,
                     amount: result.data.amount,
@@ -78,13 +134,14 @@ export const purchaseRouter = createTRPCRouter({
             } else if (input.provider === "cbe") {
                 const result = await client.verifyCBE({
                     reference: input.reference,
-                    accountSuffix: process.env.CBE_ACCOUNT_SUFFIX ?? "",
+                    accountSuffix: cbeSuffix,
                 })
                 if (!result.ok) {
                     throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                receiverAccount = result.data.receiverAccount
                 payerName = result.data.payerName ?? ""
                 status = undefined
                 receiptData = {
@@ -101,13 +158,14 @@ export const purchaseRouter = createTRPCRouter({
             } else {
                 const result = await client.verifyAbyssinia({
                     reference: input.reference,
-                    suffix: process.env.ABYSSINIA_ACCOUNT_SUFFIX ?? "",
+                    suffix: abyssiniaSuffix,
                 })
                 if (!result.ok) {
                     throw new TRPCError({ code: "BAD_REQUEST", message: result.error ?? "Verification failed" })
                 }
                 amount = result.data.amount
                 receiverName = result.data.receiverName ?? ""
+                receiverAccount = undefined // Abyssinia API may not return receiver account
                 payerName = result.data.payerName ?? ""
                 status = undefined
                 receiptData = {
@@ -123,20 +181,53 @@ export const purchaseRouter = createTRPCRouter({
             }
 
             if (amount !== pkg.price) {
+                console.warn("[purchase.verifyAndCredit] Amount mismatch", { expected: pkg.price, got: amount })
                 throw new TRPCError({
                     code: "BAD_REQUEST",
                     message: `Amount mismatch: expected ${pkg.price} ETB, got ${amount} ETB`,
                 })
             }
 
-            if (normalizeName(receiverName) !== normalizeName(process.env.PLATFORM_OWNER_FULLNAME ?? "")) {
+            // Name check from DB config (fallback to env)
+            console.log("[purchase.verifyAndCredit] Receiver name check", {
+                normalizedReceiver: normalizeName(receiverName),
+                expectedOwner,
+            })
+            if (expectedOwner && normalizeName(receiverName) !== expectedOwner) {
+                console.warn("[purchase.verifyAndCredit] Unexpected receiver account", { receiverName, expectedOwner })
                 throw new TRPCError({
                     code: "BAD_REQUEST",
                     message: "Payment received by unexpected account",
                 })
             }
 
+            // Optional account checks if user provided them
+            if (input.provider === "telebirr" && uc?.telebirrNumber && receiverAccount) {
+                console.log("[purchase.verifyAndCredit] Telebirr receiver account check", {
+                    receiverAccount,
+                    expectedReceiverAccount: uc.telebirrNumber,
+                })
+                if (normalizeName(receiverAccount) !== normalizeName(uc.telebirrNumber)) {
+                    console.warn("[purchase.verifyAndCredit] Unexpected Telebirr destination", {
+                        receiverAccount,
+                        expectedReceiverAccount: uc.telebirrNumber,
+                    })
+                    throw new TRPCError({ code: "BAD_REQUEST", message: "Payment to unexpected Telebirr number" })
+                }
+            }
+            if (input.provider === "cbe" && uc?.cbeAccountNumber && receiverAccount) {
+                if (normalizeName(receiverAccount) !== normalizeName(uc.cbeAccountNumber)) {
+                    throw new TRPCError({ code: "BAD_REQUEST", message: "Payment to unexpected CBE account" })
+                }
+            }
+
             try {
+                console.log("[purchase.verifyAndCredit] Writing receipt and crediting tokens", {
+                    tokens: pkg.tokens,
+                    amount,
+                    provider: input.provider,
+                    reference: input.reference,
+                })
                 const [, updated] = await ctx.db.$transaction([
                     ctx.db.receipt.create({
                         data: {
@@ -159,6 +250,10 @@ export const purchaseRouter = createTRPCRouter({
                     }),
                 ])
 
+                console.log("[purchase.verifyAndCredit] Success", {
+                    credited: pkg.tokens,
+                    tokens: updated.tokens,
+                })
                 return {
                     ok: true as const,
                     credited: pkg.tokens,
@@ -169,8 +264,13 @@ export const purchaseRouter = createTRPCRouter({
             } catch (e: unknown) {
                 // Handle unique constraint race
                 if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+                    console.warn("[purchase.verifyAndCredit] Unique constraint race", {
+                        provider: input.provider,
+                        reference: input.reference,
+                    })
                     throw new TRPCError({ code: "CONFLICT", message: "This reference number has already been used." })
                 }
+                console.error("[purchase.verifyAndCredit] Unhandled error", e)
                 throw e
             }
         }),

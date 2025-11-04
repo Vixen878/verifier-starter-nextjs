@@ -12,8 +12,8 @@ importers:
         specifier: ^2.7.2
         version: 2.11.1(@prisma/client@6.18.0(prisma@6.18.0(typescript@5.9.3))(typescript@5.9.3))
       '@creofam/verifier':
-        specifier: file:c:/Projects/verifier-sdk-js/creofam-verifier-0.1.0.tgz
-        version: file:../verifier-sdk-js/creofam-verifier-0.1.0.tgz
+        specifier: ^0.1.2
+        version: 0.1.2
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.66.0(react@19.2.0))
@@ -181,9 +181,8 @@ packages:
     peerDependencies:
       '@prisma/client': '>=2.26.0 || >=3 || >=4 || >=5 || >=6'
 
-  '@creofam/verifier@file:../verifier-sdk-js/creofam-verifier-0.1.0.tgz':
-    resolution: {integrity: sha512-ZQmU6417c8jnqOJO7riu3JPTKTpZ2pUKis9JuxszISU9iqQPvF7o4zn/l/DJ6/rc1bSN5o/lNb85wT2yigptCQ==, tarball: file:../verifier-sdk-js/creofam-verifier-0.1.0.tgz}
-    version: 0.1.0
+  '@creofam/verifier@0.1.2':
+    resolution: {integrity: sha512-xedQ3FV+2X98R+RmFKVCji/p0uTpUXF6TSHfAtNfFkZrmS5WKRxrrji4d3F8uCs6D4EQ+XLh9L6odxUvOQeNCw==}
     engines: {node: '>=18'}
 
   '@emnapi/core@1.7.0':
@@ -2755,7 +2754,7 @@ snapshots:
       - '@simplewebauthn/server'
       - nodemailer
 
-  '@creofam/verifier@file:../verifier-sdk-js/creofam-verifier-0.1.0.tgz': {}
+  '@creofam/verifier@0.1.2': {}
 
   '@emnapi/core@1.7.0':
     dependencies:

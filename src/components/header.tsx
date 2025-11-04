@@ -1,32 +1,48 @@
+// top-level imports and types
 "use client"
 import { useSession, signOut } from "next-auth/react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import type { JSX } from "react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { LogOut, Github, Package } from "lucide-react"
+import { api } from "@/trpc/react"
+import Link from "next/link"
 
-type HeaderProps = Readonly<{ userTokens: number }>
+type HeaderProps = Readonly<{ userTokens?: number }>
 
 export default function Header({ userTokens }: HeaderProps): JSX.Element {
-  const formattedTokens = Number.isFinite(userTokens)
-    ? userTokens.toLocaleString()
-    : "0"
   const { data: session, status } = useSession()
   const isLoggedIn: boolean = status === "authenticated"
+  // fetch tokens globally when not provided
+  const { data: fetchedTokens } = api.user.getTokens.useQuery(undefined, {
+    enabled: isLoggedIn,
+    select: (d) => d.tokens,
+  })
+  const tokensNumber: number =
+    typeof userTokens === "number"
+      ? userTokens
+      : typeof fetchedTokens === "number"
+        ? fetchedTokens
+        : 0
+  const formattedTokens = Number.isFinite(tokensNumber)
+    ? tokensNumber.toLocaleString()
+    : "0"
   const displayName: string = session?.user?.name ?? "Guest"
   const initial: string = displayName.slice(0, 1).toUpperCase()
   const handleLogin = (): void => {
     window.location.assign(`/api/auth/signin?callbackUrl=${encodeURIComponent(window.location.href)}`)
   }
-  
+
   return (
-    <header className="border-b border-border bg-card" role="banner" aria-label="TokenHub header">
+    <header className="border-b border-border bg-card" role="banner" aria-label="Verifier Starter header">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            AI
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">TokenHub</h1>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
+              VS
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Verifier Starter</h1>
+          </Link>
         </div>
         <div className="flex items-center gap-3">
           {isLoggedIn && (

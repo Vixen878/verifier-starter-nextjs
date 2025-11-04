@@ -55,16 +55,17 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String       @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?      @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
-    tokens        Int       @default(0)
+    tokens        Int          @default(0)
     receipts      Receipt[] // link receipts to user
+    UserConfig    UserConfig[]
 }
 
 model VerificationToken {
@@ -99,4 +100,17 @@ model Receipt {
     verifiedAt     DateTime        @default(now())
 
     @@unique([provider, reference], name: "provider_reference")
+}
+
+model UserConfig {
+    userId                 String   @id
+    user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    platformOwnerFullName  String?
+    cbeAccountSuffix       String? // 8 digits
+    abyssiniaAccountSuffix String? // 5 digits
+    telebirrNumber         String? // e.g., 2519xxxxxxxx
+    cbeAccountNumber       String? // e.g., 13 digits
+    abyssiniaAccountNumber String?
+    createdAt              DateTime @default(now())
+    updatedAt              DateTime @updatedAt
 }

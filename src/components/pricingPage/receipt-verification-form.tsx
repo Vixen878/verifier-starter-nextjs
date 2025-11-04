@@ -16,37 +16,50 @@ const providerNames: Record<ProviderId, string> = {
   abyssinia: "Abyssinia Bank",
 }
 
-type ReceiptVerificationFormProps = Readonly<{
-  provider: ProviderId | null
-  amount: number
-  onVerify: (reference: string) => Promise<void> | void
-  isVerifying: boolean
-  onGoBack: () => void
-}>
-
 export default function ReceiptVerificationForm({
   provider,
   amount,
   onVerify,
   isVerifying,
   onGoBack,
-}: ReceiptVerificationFormProps): JSX.Element {
+  hints,
+}: {
+  provider: ProviderId | null
+  amount: number
+  onVerify: (reference: string) => Promise<void> | void
+  isVerifying: boolean
+  onGoBack: () => void
+  hints?: { telebirr?: string; cbe?: string; abyssinia?: string }
+}): JSX.Element {
   const [receiptNumber, setReceiptNumber] = useState<string>("")
   const [error, setError] = useState<string>("")
 
   const formattedAmount = Number.isFinite(amount)
     ? Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(amount)
     : "0"
-  const providerLabel = provider ? providerNames[provider] : "your payment app"
+
+  // Use DB-provided hints exclusively (no env fallback)
+  const labelsFromHints: Record<ProviderId, string> = {
+    telebirr: hints?.telebirr ? `Telebirr ${hints.telebirr}` : "Telebirr",
+    cbe: hints?.cbe ? `CBE account ${hints.cbe}` : "CBE account",
+    abyssinia: hints?.abyssinia ? `Abyssinia account ${hints.abyssinia}` : "Abyssinia account",
+  }
+  const providerLabel = provider ? labelsFromHints[provider] : "your payment app"
+
+  // Destination label used in instructions — from hints only
+  const destinationFromHints: Record<ProviderId, string> = {
+    telebirr: hints?.telebirr ? `Telebirr ${hints.telebirr}` : "Telebirr (configure number)",
+    cbe: hints?.cbe ? `CBE account ${hints.cbe}` : "CBE account (configure account)",
+    abyssinia: hints?.abyssinia ? `Abyssinia account ${hints.abyssinia}` : "Abyssinia account (configure account)",
+  }
+  const destinationLabel: string = provider ? destinationFromHints[provider] : providerLabel
 
   const accountDestinations: Record<ProviderId, string> = {
     telebirr: `Telebirr ${env.NEXT_PUBLIC_TELEBIRR_NUMBER}`,
     cbe: `CBE account ${env.NEXT_PUBLIC_CBE_ACCOUNT_NUMBER}`,
     abyssinia: `Abyssinia account ${env.NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER}`,
   }
-  const destinationLabel: string =
-    provider ? accountDestinations[provider] : providerLabel
-
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase()
     setReceiptNumber(value)
