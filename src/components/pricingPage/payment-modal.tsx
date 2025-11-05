@@ -21,20 +21,20 @@ type Package = Readonly<{
   features?: readonly string[]
 }>
 
-type PaymentModalProps = Readonly<{
-  isOpen: boolean
-  onClose: () => void
-  package: Package
-  onPaymentSuccess: (tokens: number) => void
-  config?: Readonly<{
-    platformOwnerFullName?: string
-    cbeAccountSuffix?: string
-    abyssiniaAccountSuffix?: string
-    telebirrNumber?: string
-    cbeAccountNumber?: string
-    abyssiniaAccountNumber?: string
-  }>
-}>
+// type PaymentModalProps = Readonly<{
+//   isOpen: boolean
+//   onClose: () => void
+//   package: Package
+//   onPaymentSuccess: (tokens: number) => void
+//   config?: Readonly<{
+//     platformOwnerFullName?: string
+//     cbeAccountSuffix?: string
+//     abyssiniaAccountSuffix?: string
+//     telebirrNumber?: string
+//     cbeAccountNumber?: string
+//     abyssiniaAccountNumber?: string
+//   }>
+// }>
 
 export default function PaymentModal({
   isOpen,

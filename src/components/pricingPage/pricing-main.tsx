@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client"
 
 import { useState, type JSX, useEffect } from "react"
@@ -63,6 +61,14 @@ export default function PricingPage(): JSX.Element {
     // Load per-user config
     const { data: userCfg } = api.userConfig.get.useQuery(undefined, { enabled: isLoggedIn })
     const upsertConfig = api.userConfig.upsert.useMutation()
+    // NEW: fetch current token balance and keep it in sync
+    const utils = api.useUtils()
+    const { data: tokensData } = api.user.getTokens.useQuery(undefined, { enabled: isLoggedIn })
+    useEffect(() => {
+        if (tokensData?.tokens !== undefined) {
+            setUserTokens(tokensData.tokens)
+        }
+    }, [tokensData])
     // UI config state (DB-backed when logged in)
     type PricingConfig = Readonly<{
         platformOwnerFullName?: string
@@ -115,7 +121,11 @@ export default function PricingPage(): JSX.Element {
     }
 
     const handlePaymentSuccess = (newTokens: number) => {
+        // Optimistic UI update
         setUserTokens((prev) => prev + newTokens)
+        // Refresh with authoritative server value
+        void utils.user.getTokens.invalidate()
+
         setIsModalOpen(false)
         setSelectedPackage(null)
         setVerificationSuccess(true)
