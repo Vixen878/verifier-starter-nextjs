@@ -159,7 +159,7 @@ export default function PricingPage(): JSX.Element {
                                 <Label htmlFor="owner">Platform Owner Full Name</Label>
                                 <Input
                                     id="owner"
-                                    placeholder="e.g., LEUL ZENEBE ADMASSU"
+                                    placeholder="Your platform owner full name (must match your account)"
                                     value={config.platformOwnerFullName ?? ""}
                                     onChange={(e) => setConfig((c) => ({ ...c, platformOwnerFullName: e.target.value }))}
                                 />
@@ -168,7 +168,7 @@ export default function PricingPage(): JSX.Element {
                                 <Label htmlFor="cbeSuffix">CBE Account Suffix (8 digits)</Label>
                                 <Input
                                     id="cbeSuffix"
-                                    placeholder="e.g., 16825193"
+                                    placeholder="Your CBE account suffix"
                                     value={config.cbeAccountSuffix ?? ""}
                                     onChange={(e) => setConfig((c) => ({ ...c, cbeAccountSuffix: e.target.value }))}
                                 />
@@ -177,7 +177,7 @@ export default function PricingPage(): JSX.Element {
                                 <Label htmlFor="abySuffix">Abyssinia Account Suffix (5 digits)</Label>
                                 <Input
                                     id="abySuffix"
-                                    placeholder="e.g., 75434"
+                                    placeholder="Your Abyssinia account suffix"
                                     value={config.abyssiniaAccountSuffix ?? ""}
                                     onChange={(e) => setConfig((c) => ({ ...c, abyssiniaAccountSuffix: e.target.value }))}
                                 />
@@ -186,7 +186,7 @@ export default function PricingPage(): JSX.Element {
                                 <Label htmlFor="telebirr">Telebirr Number (251...)</Label>
                                 <Input
                                     id="telebirr"
-                                    placeholder="e.g., 251902523658"
+                                    placeholder="Your Telebirr number"
                                     value={config.telebirrNumber ?? ""}
                                     onChange={(e) => setConfig((c) => ({ ...c, telebirrNumber: e.target.value }))}
                                 />
@@ -195,7 +195,7 @@ export default function PricingPage(): JSX.Element {
                                 <Label htmlFor="cbeAcc">CBE Account Number</Label>
                                 <Input
                                     id="cbeAcc"
-                                    placeholder="e.g., 1000416825193"
+                                    placeholder="Your CBE account number"
                                     value={config.cbeAccountNumber ?? ""}
                                     onChange={(e) => setConfig((c) => ({ ...c, cbeAccountNumber: e.target.value }))}
                                 />
