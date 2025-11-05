@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import type { JSX } from "react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { LogOut, Github, Package } from "lucide-react"
+import { LogOut, Github, Package, LinkIcon } from "lucide-react"
 import { api } from "@/trpc/react"
 import Link from "next/link"
 
@@ -62,7 +62,20 @@ export default function Header({ userTokens }: HeaderProps): JSX.Element {
                   )}
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="px-3 py-2">
+                  <div className="text-sm font-semibold">{displayName}</div>
+                  {session?.user?.email && (
+                    <div className="text-xs text-muted-foreground">{session.user.email}</div>
+                  )}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => window.location.assign("/account/linked-accounts")}
+                >
+                  <LinkIcon className="h-4 w-4" />
+                  <span>Linked Accounts</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => window.open("https://github.com/", "_blank", "noopener,noreferrer")}
                 >

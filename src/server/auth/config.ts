@@ -58,7 +58,7 @@ export const authConfig = {
       },
     }),
   },
-  // Route the error to a friendly page with instructions
+  // Route to a friendly error page
   pages: {
     error: "/auth/error",
   },

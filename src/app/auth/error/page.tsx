@@ -1,12 +1,13 @@
 import Link from "next/link";
 
-export default function AuthErrorPage({
+export default async function AuthErrorPage({
     searchParams,
 }: {
-    searchParams?: { error?: string };
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-    const error = searchParams?.error;
-
+    const params = (await searchParams) ?? {};
+    const rawError = params.error;
+    const error = Array.isArray(rawError) ? rawError[0] : rawError;
     const isAccountNotLinked = error === "OAuthAccountNotLinked";
     const title = isAccountNotLinked ? "Account Not Linked" : "Sign-in Error";
 
@@ -15,8 +16,8 @@ export default function AuthErrorPage({
             <h1 className="text-xl font-semibold mb-2">{title}</h1>
             {isAccountNotLinked ? (
                 <p className="text-sm text-muted-foreground">
-                    This email already belongs to an existing account. First sign in to that account,
-                    then link additional providers from your profile.
+                    This email already belongs to an existing account. First sign in to that
+                    account, then link additional providers from your profile.
                 </p>
             ) : (
                 <p className="text-sm text-muted-foreground">
