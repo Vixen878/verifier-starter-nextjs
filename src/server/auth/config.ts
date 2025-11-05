@@ -58,5 +58,9 @@ export const authConfig = {
       },
     }),
   },
-  trustHost: true
+  // Route the error to a friendly page with instructions
+  pages: {
+    error: "/auth/error",
+  },
+  trustHost: true,
 } satisfies NextAuthConfig;
