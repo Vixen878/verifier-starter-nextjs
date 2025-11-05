@@ -8,7 +8,8 @@ export const userRouter = createTRPCRouter({
             where: { id: ctx.session.user.id },
             select: { tokens: true },
         })
-        const tokens = (me?.tokens ?? 0) as number
+        
+        const tokens = me?.tokens ?? 0
         return { tokens }
     }),
 })
