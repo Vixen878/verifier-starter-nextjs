@@ -35,7 +35,7 @@ export default function PackageCard({
     <div
       className={`relative rounded-xl border transition-all duration-300 ${
         pkg.popular
-          ? "border-primary/50 bg-gradient-to-br from-primary/5 to-primary/10 ring-1 ring-primary/20"
+          ? "border-primary/50 bg-linear-to-br from-primary/5 to-primary/10 ring-1 ring-primary/20"
           : "border-border bg-card hover:border-primary/30"
       }`}
     >

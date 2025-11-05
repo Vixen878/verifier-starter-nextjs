@@ -21,6 +21,9 @@ export const env = createEnv({
     PLATFORM_OWNER_FULLNAME: z.string(),
     CBE_ACCOUNT_SUFFIX: z.string().regex(/^\d{8}$/),
     ABYSSINIA_ACCOUNT_SUFFIX: z.string().regex(/^\d{5}$/),
+    NEXTAUTH_TRUST_HOST: z
+      .union([z.literal("true"), z.literal("false")])
+      .default("false"), // You can also use z.enum(["true", "false"])
   },
 
   /**
@@ -52,6 +55,7 @@ export const env = createEnv({
     NEXT_PUBLIC_TELEBIRR_NUMBER: process.env.NEXT_PUBLIC_TELEBIRR_NUMBER,
     NEXT_PUBLIC_CBE_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_CBE_ACCOUNT_NUMBER,
     NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER: process.env.NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER,
+    NEXTAUTH_TRUST_HOST: process.env.NEXTAUTH_TRUST_HOST,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

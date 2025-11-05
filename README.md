@@ -48,7 +48,7 @@ This is a demo; it’s not a complete product. You should harden error handling,
 
 1) Clone this repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Vixen878/verifier-starter-nextjs.git
 ```
 
 2) Install dependencies

@@ -1,5 +1,5 @@
-// top-level imports and types
 "use client"
+
 import { useSession, signOut } from "next-auth/react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import type { JSX } from "react"

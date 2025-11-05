@@ -96,7 +96,7 @@ export default function PaymentProviderSelector({
                     scale: isSelected ? 1.1 : 1,
                   }}
                   transition={{ duration: 0.2 }}
-                  className={`rounded-lg p-2.5 bg-gradient-to-br ${provider.gradient} text-white`}
+                  className={`rounded-lg p-2.5 bg-linear-to-br ${provider.gradient} text-white`}
                 >
                   <Icon className="h-5 w-5" />
                 </motion.div>

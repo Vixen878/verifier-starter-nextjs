@@ -1,4 +1,3 @@
-import { postRouter } from "@/server/api/routers/post"
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc"
 import { purchaseRouter } from "./routers/purchase";
 import { userRouter } from "./routers/user";
@@ -11,7 +10,6 @@ import { userConfigRouter } from "./routers/user-config"; // add user-config rou
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  post: postRouter,
   purchase: purchaseRouter,
   user: userRouter,
   verify: verifyRouter, // add verification-only router

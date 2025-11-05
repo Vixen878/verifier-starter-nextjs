@@ -6,15 +6,14 @@ import { AlertCircle, CheckCircle, Loader, ArrowLeft } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { env } from "@/env"
 
 type ProviderId = "cbe" | "telebirr" | "abyssinia"
 
-const providerNames: Record<ProviderId, string> = {
-  cbe: "CBE",
-  telebirr: "Telebirr",
-  abyssinia: "Abyssinia Bank",
-}
+// const providerNames: Record<ProviderId, string> = {
+//   cbe: "CBE",
+//   telebirr: "Telebirr",
+//   abyssinia: "Abyssinia Bank",
+// }
 
 export default function ReceiptVerificationForm({
   provider,
@@ -54,11 +53,11 @@ export default function ReceiptVerificationForm({
   }
   const destinationLabel: string = provider ? destinationFromHints[provider] : providerLabel
 
-  const accountDestinations: Record<ProviderId, string> = {
-    telebirr: `Telebirr ${env.NEXT_PUBLIC_TELEBIRR_NUMBER}`,
-    cbe: `CBE account ${env.NEXT_PUBLIC_CBE_ACCOUNT_NUMBER}`,
-    abyssinia: `Abyssinia account ${env.NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER}`,
-  }
+  // const accountDestinations: Record<ProviderId, string> = {
+  //   telebirr: `Telebirr ${env.NEXT_PUBLIC_TELEBIRR_NUMBER}`,
+  //   cbe: `CBE account ${env.NEXT_PUBLIC_CBE_ACCOUNT_NUMBER}`,
+  //   abyssinia: `Abyssinia account ${env.NEXT_PUBLIC_ABYSSINIA_ACCOUNT_NUMBER}`,
+  // }
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase()
@@ -155,7 +154,7 @@ export default function ReceiptVerificationForm({
             aria-live="polite"
             className="mb-4 flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3"
           >
-            <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
             <p className="text-xs text-destructive font-medium">{error}</p>
           </motion.div>
         )}
@@ -196,15 +195,15 @@ export default function ReceiptVerificationForm({
         <p className="text-xs font-semibold text-foreground uppercase tracking-wide">What to expect</p>
         <ul className="space-y-1.5 text-xs text-muted-foreground">
           <li className="flex gap-2">
-            <CheckCircle className="h-3 w-3 text-accent flex-shrink-0 mt-0.5" />
+            <CheckCircle className="h-3 w-3 text-accent shrink-0 mt-0.5" />
             <span>Verification takes 10-30 seconds</span>
           </li>
           <li className="flex gap-2">
-            <CheckCircle className="h-3 w-3 text-accent flex-shrink-0 mt-0.5" />
+            <CheckCircle className="h-3 w-3 text-accent shrink-0 mt-0.5" />
             <span>Tokens credited instantly</span>
           </li>
           <li className="flex gap-2">
-            <CheckCircle className="h-3 w-3 text-accent flex-shrink-0 mt-0.5" />
+            <CheckCircle className="h-3 w-3 text-accent shrink-0 mt-0.5" />
             <span>Modal closes automatically</span>
           </li>
         </ul>
